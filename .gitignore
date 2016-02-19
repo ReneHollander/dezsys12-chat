@@ -2,3 +2,5 @@
 target/
 *.iml
 db/
+.gradle/
+build/
