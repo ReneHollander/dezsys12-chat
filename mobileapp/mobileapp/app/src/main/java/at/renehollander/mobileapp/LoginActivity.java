@@ -3,6 +3,7 @@ package at.renehollander.mobileapp;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -44,12 +45,15 @@ public class LoginActivity extends AppCompatActivity {
         Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
         mEmailSignInButton.setOnClickListener(view -> attemptLogin());
 
+        Button mGoToRegisterButton = (Button) findViewById(R.id.go_to_register_button);
+        mGoToRegisterButton.setOnClickListener(view -> startActivity(new Intent(this, RegisterActivity.class)));
+
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
     }
 
     /**
-     * Attempts to sign in or register the account specified by the login form.
+     * Attempts to log into the account specified by the login form.
      * If there are form errors (invalid email, missing fields, etc.), the
      * errors are presented and no actual login attempt is made.
      */
@@ -91,15 +95,20 @@ public class LoginActivity extends AppCompatActivity {
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
             showProgress(true);
+
+            // try to log in and display an error or information dialog
             ((Application) getApplication()).login(email, password, (err, res) -> {
                 showProgress(false);
                 if (err == null) {
                     if (res) {
+                        Util.messageDialogRunLater(this, "Success", "You successfully logged in!");
                         Log.d("login", "Successfull login");
                     } else {
-                        Log.d("login", "Error logging in");
+                        Util.messageDialogRunLater(this, "Error", "Wrong email and or password!");
+                        Log.e("login", "Error logging in");
                     }
                 } else {
+                    Util.messageDialogRunLater(this, "Error", "An error occured while logging in: " + err.getMessage());
                     Log.e("login", "Error logging in", err);
                 }
             });
@@ -126,8 +135,7 @@ public class LoginActivity extends AppCompatActivity {
             int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
 
             mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-            mLoginFormView.animate().setDuration(shortAnimTime).alpha(
-                    show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
+            mLoginFormView.animate().setDuration(shortAnimTime).alpha(show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
                 @Override
                 public void onAnimationEnd(Animator animation) {
                     mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
@@ -135,8 +143,7 @@ public class LoginActivity extends AppCompatActivity {
             });
 
             mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mProgressView.animate().setDuration(shortAnimTime).alpha(
-                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
+            mProgressView.animate().setDuration(shortAnimTime).alpha(show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
                 @Override
                 public void onAnimationEnd(Animator animation) {
                     mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
@@ -150,4 +157,3 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 }
-
