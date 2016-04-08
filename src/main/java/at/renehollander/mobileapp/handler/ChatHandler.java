@@ -1,51 +1,31 @@
 package at.renehollander.mobileapp.handler;
 
-import org.springframework.web.socket.CloseStatus;
-import org.springframework.web.socket.WebSocketHandler;
-import org.springframework.web.socket.WebSocketMessage;
-import org.springframework.web.socket.WebSocketSession;
+import at.renehollander.mobileapp.annotation.Event;
+import at.renehollander.mobileapp.annotation.SocketIO;
+import com.corundumstudio.socketio.AckRequest;
+import com.corundumstudio.socketio.SocketIOClient;
+import com.corundumstudio.socketio.listener.ConnectListener;
+import com.corundumstudio.socketio.listener.DisconnectListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-//@ServerEndpoint(value = "/chat"/*, configurator = SpringConfigurator.class*/)
-//public class ChatHandler {
-//
-//    private static Logger LOG = LoggerFactory.getLogger(ChatHandler.class);
-//
-//    @Inject
-//    private UserRepository userRepository;
-//
-//    @OnMessage
-//    public void handleMessage(Session session, String message) {
-//        System.out.println(userRepository.count());
-//        System.out.println(message);
-//    }
-//
-//}
-//
+@SocketIO(port = 8081)
+public class ChatHandler implements ConnectListener, DisconnectListener {
 
-public class ChatHandler implements WebSocketHandler {
+    private static final Logger LOG = LoggerFactory.getLogger(ChatHandler.class);
 
     @Override
-    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+    public void onConnect(SocketIOClient client) {
+        LOG.info("Client " + client + " connected!");
+    }
 
+    @Event("chat")
+    public void onChat(SocketIOClient client, String data, AckRequest ackSender) {
+        LOG.info("Client " + client + " sent " + data);
     }
 
     @Override
-    public void handleMessage(WebSocketSession session, WebSocketMessage<?> message) throws Exception {
-
-    }
-
-    @Override
-    public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
-
-    }
-
-    @Override
-    public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {
-
-    }
-
-    @Override
-    public boolean supportsPartialMessages() {
-        return false;
+    public void onDisconnect(SocketIOClient client) {
+        LOG.info("Client " + client + " disconnected!");
     }
 }

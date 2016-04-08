@@ -7,10 +7,14 @@ import com.loopj.android.http.JsonHttpResponseHandler;
 
 import org.json.JSONObject;
 
+import java.net.URISyntaxException;
+
 import at.renehollander.chat.util.CallbackWithError;
 import cz.msebera.android.httpclient.Header;
 import cz.msebera.android.httpclient.entity.ContentType;
 import cz.msebera.android.httpclient.entity.StringEntity;
+import io.socket.client.IO;
+import io.socket.client.Socket;
 
 public class Application extends android.app.Application {
 
@@ -19,18 +23,21 @@ public class Application extends android.app.Application {
     private static final String CHAT_URL = "ws://" + HOSTNAME + "/chat";
 
     private AsyncHttpClient client;
-    private ChatSocket chatsocket;
 
     @Override
     public void onCreate() {
         super.onCreate();
 
-        client = new AsyncHttpClient();
-        chatsocket = new ChatSocket();
-        chatsocket.connect(CHAT_URL, "df", (ex) -> {
-            if (ex != null) Log.e("chat", "error connecting", ex);
-            else Log.d("chat", "connected");
-        });
+        IO.Options opts = new IO.Options();
+        try {
+            Socket socket = IO.socket("http://10.0.0.47:8081", opts);
+            socket.connect();
+            socket.on(Socket.EVENT_CONNECT, (data) -> {
+                socket.emit("chat", "Hello World!");
+            });
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
     }
 
     public void register(String email, String password, CallbackWithError<Throwable, Boolean> cb) {
