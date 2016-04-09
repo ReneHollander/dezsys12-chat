@@ -5,6 +5,7 @@ import android.util.Log;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.JsonHttpResponseHandler;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.net.URISyntaxException;
@@ -18,8 +19,8 @@ import io.socket.client.Socket;
 
 public class Application extends android.app.Application {
 
-    private static final String HOSTNAME = "10.0.0.9:8080";
-    private static final String API_URL = "https://" + HOSTNAME;
+    private static final String HOSTNAME = "10.0.0.47:8080";
+    private static final String API_URL = "http://" + HOSTNAME;
     private static final String CHAT_URL = "ws://" + HOSTNAME + "/chat";
 
     private AsyncHttpClient client;
@@ -27,6 +28,8 @@ public class Application extends android.app.Application {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        client = new AsyncHttpClient();
 
         IO.Options opts = new IO.Options();
         try {
@@ -40,10 +43,11 @@ public class Application extends android.app.Application {
         }
     }
 
-    public void register(String email, String password, CallbackWithError<Throwable, Boolean> cb) {
+    public void register(String email, String username, String password, CallbackWithError<Throwable, Boolean> cb) {
         try {
             JSONObject body = new JSONObject();
             body.put("email", email);
+            body.put("username", username);
             body.put("password", password);
             client.post(this, API_URL + "/register", new StringEntity(body.toString()), ContentType.APPLICATION_JSON.getMimeType(), new JsonHttpResponseHandler() {
                 @Override
@@ -73,7 +77,7 @@ public class Application extends android.app.Application {
 
     }
 
-    public void login(String email, String password, CallbackWithError<Throwable, Boolean> cb) {
+    public void login(String email, String password, CallbackWithError<Throwable, String> cb) {
         try {
             JSONObject body = new JSONObject();
             body.put("email", email);
@@ -82,7 +86,11 @@ public class Application extends android.app.Application {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                     if (statusCode == 200) {
-                        cb.call(null, true);
+                        try {
+                            cb.call(null, response.getString("token"));
+                        } catch (JSONException e) {
+                            throw new RuntimeException(e);
+                        }
                     } else {
                         cb.call(new Exception("invalid status code for success: " + statusCode), null);
                     }
@@ -94,7 +102,7 @@ public class Application extends android.app.Application {
 
                 public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject object) {
                     if (statusCode == 403) {
-                        cb.call(null, false);
+                        cb.call(null, null);
                     } else {
                         cb.call(throwable, null);
                     }

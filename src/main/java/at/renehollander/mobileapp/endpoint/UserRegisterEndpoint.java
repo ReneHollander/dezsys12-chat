@@ -22,7 +22,7 @@ public class UserRegisterEndpoint {
 
     @POST
     public Response post(User user) {
-        if (userRepository.exists(user.getEmail())) {
+        if (userRepository.exists(user.getEmail()) || userRepository.findByUsername(user.getUsername()) != null) {
             return Response.status(400).entity(Maps.of("success", false)).build();
         } else {
             userRepository.save(user);

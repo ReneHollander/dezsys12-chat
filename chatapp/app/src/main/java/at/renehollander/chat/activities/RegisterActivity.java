@@ -26,6 +26,7 @@ public class RegisterActivity extends AppCompatActivity {
 
     // UI references.
     private AutoCompleteTextView mEmailView;
+    private EditText mUsernameView;
     private EditText mPasswordView;
     private View mProgressView;
     private View mRegisterFormView;
@@ -36,6 +37,7 @@ public class RegisterActivity extends AppCompatActivity {
         setContentView(R.layout.activity_register);
         // Set up the register form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
+        mUsernameView = (AutoCompleteTextView) findViewById(R.id.username);
 
         mPasswordView = (EditText) findViewById(R.id.password);
         mPasswordView.setOnEditorActionListener((textView, id, keyEvent) -> {
@@ -64,10 +66,12 @@ public class RegisterActivity extends AppCompatActivity {
     private void attemptRegister() {
         // Reset errors.
         mEmailView.setError(null);
+        mUsernameView.setError(null);
         mPasswordView.setError(null);
 
         // Store values at the time of the register attempt.
         String email = mEmailView.getText().toString();
+        String username = mUsernameView.getText().toString();
         String password = mPasswordView.getText().toString();
 
         boolean cancel = false;
@@ -91,6 +95,12 @@ public class RegisterActivity extends AppCompatActivity {
             cancel = true;
         }
 
+        if (TextUtils.isEmpty(username)) {
+            mUsernameView.setError(getString(R.string.error_field_required));
+            focusView = mUsernameView;
+            cancel = true;
+        }
+
         if (cancel) {
             // There was an error; don't attempt register and focus the first
             // form field with an error.
@@ -101,7 +111,7 @@ public class RegisterActivity extends AppCompatActivity {
             showProgress(true);
 
             // try to log in and display an error or information dialog
-            ((Application) getApplication()).register(email, password, (err, res) -> {
+            ((Application) getApplication()).register(email, username, password, (err, res) -> {
                 showProgress(false);
                 if (err == null) {
                     if (res) {

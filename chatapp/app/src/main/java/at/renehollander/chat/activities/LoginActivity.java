@@ -104,9 +104,9 @@ public class LoginActivity extends AppCompatActivity {
             ((Application) getApplication()).login(email, password, (err, res) -> {
                 showProgress(false);
                 if (err == null) {
-                    if (res) {
+                    if (res != null) {
                         Util.messageDialogRunLater(this, "Success", "You successfully logged in!");
-                        Log.d("login", "Successfull login");
+                        Log.d("login", "Successfull login. Recieved token " + res);
                     } else {
                         Util.messageDialogRunLater(this, "Error", "Wrong email and or password!");
                         Log.e("login", "Error logging in");
