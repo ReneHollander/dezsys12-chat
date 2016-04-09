@@ -40,9 +40,10 @@ public class SocketIOConfiguration {
         return servers;
     }
 
+    @SuppressWarnings("unchecked")
     public SocketIOServer createFrom(SocketIO annotationConfig, Object object) {
         com.corundumstudio.socketio.Configuration config = new com.corundumstudio.socketio.Configuration();
-        config.setPort(8081);
+        config.setPort(annotationConfig.port());
         config.getSocketConfig().setReuseAddress(true);
 
         SocketIOServer server = new SocketIOServer(config);
