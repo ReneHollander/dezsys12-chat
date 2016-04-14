@@ -4,6 +4,7 @@ import at.renehollander.mobileapp.annotation.Event;
 import at.renehollander.mobileapp.annotation.SocketIO;
 import com.corundumstudio.socketio.AckRequest;
 import com.corundumstudio.socketio.SocketIOClient;
+import com.corundumstudio.socketio.SocketIOServer;
 import com.corundumstudio.socketio.listener.ConnectListener;
 import com.corundumstudio.socketio.listener.DisconnectListener;
 import org.slf4j.Logger;
@@ -13,6 +14,11 @@ import org.slf4j.LoggerFactory;
 public class ChatHandler implements ConnectListener, DisconnectListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(ChatHandler.class);
+
+    private SocketIOServer server;
+
+    private void init() {
+    }
 
     @Override
     public void onConnect(SocketIOClient client) {

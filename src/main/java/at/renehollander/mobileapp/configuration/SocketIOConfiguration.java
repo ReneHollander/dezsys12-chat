@@ -15,6 +15,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,7 +54,7 @@ public class SocketIOConfiguration {
         if (object instanceof DisconnectListener)
             server.addDisconnectListener((DisconnectListener) object);
 
-        for (Method method : object.getClass().getMethods()) {
+        for (Method method : object.getClass().getDeclaredMethods()) {
             Event event = method.getAnnotation(Event.class);
             if (event != null) {
                 if (event.value().isEmpty()) {
@@ -77,6 +79,29 @@ public class SocketIOConfiguration {
                     throw new IllegalArgumentException("Invalid signature for method " + stringifyMethod(method));
                 }
             }
+        }
+
+        for (Field field : object.getClass().getDeclaredFields()) {
+            if (field.getType() == SocketIOServer.class) {
+                boolean accessible = field.isAccessible();
+                field.setAccessible(true);
+                try {
+                    field.set(object, server);
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+                field.setAccessible(accessible);
+            }
+        }
+        try {
+            Method initMethod = object.getClass().getDeclaredMethod("init");
+            boolean accessible = initMethod.isAccessible();
+            initMethod.setAccessible(true);
+            initMethod.invoke(object);
+            initMethod.setAccessible(accessible);
+        } catch (NoSuchMethodException ignored) {
+        } catch (InvocationTargetException | IllegalAccessException e) {
+            throw new RuntimeException(e);
         }
         server.start();
         return server;
