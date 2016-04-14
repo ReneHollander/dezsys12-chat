@@ -1,15 +1,16 @@
-package at.renehollander.chat.activities;
+package at.renehollander.chat.fragments;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
-import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
@@ -22,7 +23,7 @@ import at.renehollander.chat.util.Util;
 /**
  * A register screen that offers register via email/password.
  */
-public class RegisterActivity extends AppCompatActivity {
+public class RegisterFragment extends CustomFragment {
 
     // UI references.
     private AutoCompleteTextView mEmailView;
@@ -32,10 +33,17 @@ public class RegisterActivity extends AppCompatActivity {
     private View mRegisterFormView;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_register);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_register, container, false);
+    }
+
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
         // Set up the register form.
+
+        getActivity().setTitle(R.string.register_fragment_title);
+
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         mUsernameView = (AutoCompleteTextView) findViewById(R.id.username);
 
@@ -49,10 +57,10 @@ public class RegisterActivity extends AppCompatActivity {
         });
 
         Button mEmailSignInButton = (Button) findViewById(R.id.email_register_button);
-        mEmailSignInButton.setOnClickListener(view -> attemptRegister());
+        mEmailSignInButton.setOnClickListener(btn -> attemptRegister());
 
         Button mGoToLoginButton = (Button) findViewById(R.id.go_to_login_button);
-        mGoToLoginButton.setOnClickListener(view -> startActivity(new Intent(this, LoginActivity.class)));
+        mGoToLoginButton.setOnClickListener(btn -> replace(R.id.fragment_container, new LoginFragment()));
 
         mRegisterFormView = findViewById(R.id.register_form);
         mProgressView = findViewById(R.id.register_progress);
@@ -111,19 +119,19 @@ public class RegisterActivity extends AppCompatActivity {
             showProgress(true);
 
             // try to log in and display an error or information dialog
-            ((Application) getApplication()).register(email, username, password, (err, res) -> {
+            ((Application) getActivity().getApplication()).register(email, username, password, (err, res) -> {
                 showProgress(false);
                 if (err == null) {
                     if (res) {
-                        Util.messageDialogRunLater(this, "Success", "You successfully registered!");
+                        Util.messageDialogRunLater(getActivity(), "Success", "You successfully registered!");
                         Log.d("register", "Successfull register");
-                        startActivity(new Intent(this, LoginActivity.class));
+                        replace(R.id.fragment_container, new LoginFragment());
                     } else {
-                        Util.messageDialogRunLater(this, "Error", "Email already in use!");
+                        Util.messageDialogRunLater(getActivity(), "Error", "Email already in use!");
                         Log.e("register", "Email already in use!");
                     }
                 } else {
-                    Util.messageDialogRunLater(this, "Error", "An error occured while registering: " + err.getMessage());
+                    Util.messageDialogRunLater(getActivity(), "Error", "An error occured while registering: " + err.getMessage());
                     Log.e("register", "Error registering", err);
                 }
             });

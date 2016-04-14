@@ -1,15 +1,16 @@
-package at.renehollander.chat.activities;
+package at.renehollander.chat.fragments;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
-import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
@@ -22,7 +23,7 @@ import at.renehollander.chat.util.Util;
 /**
  * A login screen that offers login via email/password.
  */
-public class LoginActivity extends AppCompatActivity {
+public class LoginFragment extends CustomFragment {
 
     // UI references.
     private AutoCompleteTextView mEmailView;
@@ -31,9 +32,22 @@ public class LoginActivity extends AppCompatActivity {
     private View mLoginFormView;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
+        setHasOptionsMenu(true);
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_login, container, false);
+    }
+
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        getActivity().setTitle(getResources().getString(R.string.login_fragment_title));
+
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
 
@@ -47,10 +61,10 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
-        mEmailSignInButton.setOnClickListener(view -> attemptLogin());
+        mEmailSignInButton.setOnClickListener(btn -> attemptLogin());
 
         Button mGoToRegisterButton = (Button) findViewById(R.id.go_to_register_button);
-        mGoToRegisterButton.setOnClickListener(view -> startActivity(new Intent(this, RegisterActivity.class)));
+        mGoToRegisterButton.setOnClickListener(btn -> replace(R.id.fragment_container, new RegisterFragment()));
 
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
@@ -101,18 +115,18 @@ public class LoginActivity extends AppCompatActivity {
             showProgress(true);
 
             // try to log in and display an error or information dialog
-            ((Application) getApplication()).login(email, password, (err, res) -> {
+            ((Application) getActivity().getApplication()).login(email, password, (err, res) -> {
                 showProgress(false);
                 if (err == null) {
                     if (res != null) {
-                        Util.messageDialogRunLater(this, "Success", "You successfully logged in!");
+                        Util.messageDialogRunLater(getActivity(), "Success", "You successfully logged in!");
                         Log.d("login", "Successfull login. Recieved token " + res);
                     } else {
-                        Util.messageDialogRunLater(this, "Error", "Wrong email and or password!");
+                        Util.messageDialogRunLater(getActivity(), "Error", "Wrong email and or password!");
                         Log.e("login", "Error logging in");
                     }
                 } else {
-                    Util.messageDialogRunLater(this, "Error", "An error occured while logging in: " + err.getMessage());
+                    Util.messageDialogRunLater(getActivity(), "Error", "An error occured while logging in: " + err.getMessage());
                     Log.e("login", "Error logging in", err);
                 }
             });
