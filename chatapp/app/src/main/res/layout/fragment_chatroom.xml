@@ -8,8 +8,9 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginBottom="48dip"
-        android:divider="@null"
         android:background="@color/messages_background"
+        android:divider="@null"
+        android:listSelector="@android:color/transparent"
         android:showDividers="none"
         android:stackFromBottom="true"
         android:transcriptMode="alwaysScroll" />
@@ -38,9 +39,7 @@
             android:layout_gravity="center_vertical"
             android:layout_weight="1"
             android:background="#FFFFFF"
-            android:src="@drawable/ic_send_black"
-
-            />
+            android:src="@drawable/ic_send_dark" />
     </LinearLayout>
 
 </RelativeLayout>

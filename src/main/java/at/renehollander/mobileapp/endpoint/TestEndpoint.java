@@ -20,8 +20,9 @@ public class TestEndpoint {
     @GET
     public Response get() {
         System.out.println("here");
-        chatHandler.onChat(null, Maps.of("room", "Room 1", "user", "Rene8888", "date", new Date(), "text", "hellooooooo"));
+        chatHandler.onChat(null, Maps.of("room", "Room 1", "user", "Paul1032", "date", new Date(), "text", "woho"));
         chatHandler.onChat(null, Maps.of("room", "Room 2", "user", "Rene8888", "date", new Date(), "text", "hellooooooo"));
+        chatHandler.onChat(null, Maps.of("room", "Room 1", "user", "DeineMama", "date", new Date(), "text", "fock off"));
         return Response.status(200).build();
     }
 

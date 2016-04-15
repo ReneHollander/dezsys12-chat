@@ -2,8 +2,6 @@ package at.renehollander.chat.model;
 
 import android.databinding.ObservableArrayList;
 
-import java.util.List;
-
 public class ChatRoom {
 
     private String name;
@@ -20,6 +18,11 @@ public class ChatRoom {
 
     public ObservableArrayList<Message> getMessages() {
         return messages;
+    }
+
+    public Message getLast() {
+        if (getMessages().size() == 0) return null;
+        else return getMessages().get(getMessages().size() - 1);
     }
 
     @Override

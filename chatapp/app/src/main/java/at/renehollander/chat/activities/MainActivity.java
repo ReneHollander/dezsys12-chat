@@ -1,13 +1,10 @@
 package at.renehollander.chat.activities;
 
-import android.databinding.ObservableArrayList;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
-import at.renehollander.chat.Application;
 import at.renehollander.chat.R;
-import at.renehollander.chat.fragments.ChatRoomListFragment;
-import at.renehollander.chat.model.ChatRoom;
+import at.renehollander.chat.fragments.LoginFragment;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -27,8 +24,7 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-//            getSupportFragmentManager().beginTransaction().add(R.id.fragment_container, new LoginFragment()).commit();
-            getSupportFragmentManager().beginTransaction().add(R.id.fragment_container, new ChatRoomListFragment()).commit();
+            getSupportFragmentManager().beginTransaction().add(R.id.fragment_container, new LoginFragment()).commit();
         }
     }
 

@@ -6,6 +6,7 @@ import android.annotation.TargetApi;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.app.FragmentManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,6 +16,8 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
+
+import org.json.JSONException;
 
 import at.renehollander.chat.Application;
 import at.renehollander.chat.R;
@@ -120,6 +123,18 @@ public class LoginFragment extends CustomFragment {
                 if (err == null) {
                     if (res != null) {
                         Util.messageDialogRunLater(getActivity(), "Success", "You successfully logged in!");
+                        try {
+                            Log.d("login", String.valueOf(res));
+                            Application app = ((Application) getActivity().getApplication());
+                            app.setUsername(res.getString("username"));
+                            app.connectToChat(res.getString("username"));
+                            replace(R.id.fragment_container, new ChatRoomListFragment());
+                            FragmentManager manager = getActivity().getSupportFragmentManager();
+                            manager.beginTransaction().remove(this).commit();
+
+                        } catch (JSONException e) {
+                            throw new RuntimeException(e);
+                        }
                         Log.d("login", "Successfull login. Recieved token " + res);
                     } else {
                         Util.messageDialogRunLater(getActivity(), "Error", "Wrong email and or password!");

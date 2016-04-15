@@ -17,4 +17,11 @@ public abstract class CustomFragment extends Fragment {
         transaction.commit();
     }
 
+    public void add(int id, CustomFragment fragment) {
+        FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
+        transaction.add(id, fragment);
+        transaction.addToBackStack(null);
+        transaction.commit();
+    }
+
 }

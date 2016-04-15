@@ -11,7 +11,10 @@ import com.corundumstudio.socketio.listener.DisconnectListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @SocketIO(port = 8081)
 public class ChatHandler implements ConnectListener, DisconnectListener {
@@ -23,24 +26,24 @@ public class ChatHandler implements ConnectListener, DisconnectListener {
     private Map<String, Map<String, Object>> chatrooms = new HashMap<>();
 
     private void init() {
-        {
-            List<Map<String, Object>> messageList = new ArrayList<>();
-            messageList.add(Maps.of("room", "Room 1", "user", "Rene8888", "date", new Date(), "text", "Hello World!"));
-            messageList.add(Maps.of("room", "Room 1", "user", "Paul1032", "date", new Date(), "text", "Hi!"));
-            messageList.add(Maps.of("room", "Room 1", "user", "Rene8888", "date", new Date(), "text", "fock off m8"));
-            messageList.add(Maps.of("room", "Room 1", "user", "Rene8888", "date", new Date(), "text", "you gucci fam?"));
-            messageList.add(Maps.of("room", "Room 1", "user", "Paul1032", "date", new Date(), "text", "sure you faggot"));
-            chatrooms.put("Room 1", Maps.of("name", "Room 1", "messages", messageList));
-        }
-        {
-            List<Map<String, Object>> messageList = new ArrayList<>();
-            messageList.add(Maps.of("room", "Room 2", "user", "Paul1032", "date", new Date(), "text", "itz workening!"));
-            messageList.add(Maps.of("room", "Room 2", "user", "Rene8888", "date", new Date(), "text", "yiss!"));
-            messageList.add(Maps.of("room", "Room 2", "user", "Rene8888", "date", new Date(), "text", "but its shit m9"));
-            messageList.add(Maps.of("room", "Room 2", "user", "Paul1032", "date", new Date(), "text", "it is\nmultiline"));
-            messageList.add(Maps.of("room", "Room 2", "user", "Rene8888", "date", new Date(), "text", "thats nice"));
-            chatrooms.put("Room 2", Maps.of("name", "Room 2", "messages", messageList));
-        }
+//        {
+//            List<Map<String, Object>> messageList = new ArrayList<>();
+//            messageList.add(Maps.of("room", "Room 1", "user", "Rene8888", "date", new Date(), "text", "Hello World!"));
+//            messageList.add(Maps.of("room", "Room 1", "user", "Paul1032", "date", new Date(), "text", "Hi!"));
+//            messageList.add(Maps.of("room", "Room 1", "user", "Rene8888", "date", new Date(), "text", "fock off m8"));
+//            messageList.add(Maps.of("room", "Room 1", "user", "Rene8888", "date", new Date(), "text", "you gucci fam?"));
+//            messageList.add(Maps.of("room", "Room 1", "user", "Paul1032", "date", new Date(), "text", "sure you faggot"));
+//            chatrooms.put("Room 1", Maps.of("name", "Room 1", "messages", messageList));
+//        }
+//        {
+//            List<Map<String, Object>> messageList = new ArrayList<>();
+//            messageList.add(Maps.of("room", "Room 2", "user", "Paul1032", "date", new Date(), "text", "itz workening!"));
+//            messageList.add(Maps.of("room", "Room 2", "user", "Rene8888", "date", new Date(), "text", "yiss!"));
+//            messageList.add(Maps.of("room", "Room 2", "user", "Rene8888", "date", new Date(), "text", "but its shit m9"));
+//            messageList.add(Maps.of("room", "Room 2", "user", "Paul1032", "date", new Date(), "text", "it is\nmultiline"));
+//            messageList.add(Maps.of("room", "Room 2", "user", "Rene8888", "date", new Date(), "text", "thats nice"));
+//            chatrooms.put("Room 2", Maps.of("name", "Room 2", "messages", messageList));
+//        }
     }
 
     @Override
@@ -69,6 +72,13 @@ public class ChatHandler implements ConnectListener, DisconnectListener {
     @Event("get_rooms")
     public void onGetRooms(SocketIOClient client, Object ignore, AckRequest ackSender) {
         ackSender.sendAckData(chatrooms);
+    }
+
+    @Event("new_room")
+    public void onNewRoom(SocketIOClient client, Map<String, Object> data, AckRequest ackSender) {
+        LOG.info(String.valueOf(data));
+        chatrooms.put((String) data.get("room"), Maps.of("name", data.get("room"), "messages", new ArrayList<>()));
+        server.getBroadcastOperations().sendEvent("new_room", data);
     }
 
     @Override

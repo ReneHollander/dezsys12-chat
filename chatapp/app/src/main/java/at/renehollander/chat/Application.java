@@ -27,22 +27,21 @@ import io.socket.client.Socket;
 
 public class Application extends android.app.Application {
 
-    private static final String API_URL = "http://10.0.0.62:8080";
-    private static final String SOCKETIO_URL = "http://10.0.0.62:8081";
+    private static final String API_URL = "http://10.0.105.191:8080";
+    private static final String SOCKETIO_URL = "http://10.0.105.191:8081";
 
     private AsyncHttpClient client;
     private Socket socket;
 
     private ObservableArrayList<ChatRoom> chatrooms = new ObservableArrayList<>();
     private Map<String, ChatRoom> chatRoomMap = new HashMap<>();
+    private String username;
 
     @Override
     public void onCreate() {
         super.onCreate();
 
         client = new AsyncHttpClient();
-
-        connectToChat("sdg");
     }
 
     public void register(String email, String username, String password, CallbackWithError<Throwable, Boolean> cb) {
@@ -79,7 +78,7 @@ public class Application extends android.app.Application {
 
     }
 
-    public void login(String email, String password, CallbackWithError<Throwable, String> cb) {
+    public void login(String email, String password, CallbackWithError<Throwable, JSONObject> cb) {
         try {
             JSONObject body = new JSONObject();
             body.put("email", email);
@@ -88,11 +87,7 @@ public class Application extends android.app.Application {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                     if (statusCode == 200) {
-                        try {
-                            cb.call(null, response.getString("token"));
-                        } catch (JSONException e) {
-                            throw new RuntimeException(e);
-                        }
+                        cb.call(null, response);
                     } else {
                         cb.call(new Exception("invalid status code for success: " + statusCode), null);
                     }
@@ -115,10 +110,10 @@ public class Application extends android.app.Application {
         }
     }
 
-    public void connectToChat(String token) {
+    public void connectToChat(String username) {
+        this.username = username;
         Log.d("chat", "connecting");
         IO.Options opts = new IO.Options();
-        opts.query = "token=" + token;
         try {
             this.socket = IO.socket(SOCKETIO_URL, opts);
         } catch (URISyntaxException e) {
@@ -127,18 +122,35 @@ public class Application extends android.app.Application {
         socket.connect();
         socket.on(Socket.EVENT_CONNECT, this::onConnect);
         socket.on(Socket.EVENT_DISCONNECT, this::onDisconnect);
-        socket.on("chat", this::onChat);
+        socket.on("message", this::onMessage);
+        socket.on("new_room", this::onNewRoom);
     }
 
-    private void onChat(Object[] objects) {
+    private void onNewRoom(Object[] objects) {
         Log.d("chat", String.valueOf(objects[0]));
         JSONObject obj = (JSONObject) objects[0];
         try {
-            Message msg = decode("Rene8888", obj);
+            String roomName = obj.getString("room");
+            if (!chatRoomMap.containsKey(roomName)) {
+                ChatRoom room = new ChatRoom(roomName, new ObservableArrayList<>());
+                chatRoomMap.put(room.getName(), room);
+                chatrooms.add(room);
+            }
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void onMessage(Object[] objects) {
+        Log.d("chat", String.valueOf(objects[0]));
+        JSONObject obj = (JSONObject) objects[0];
+        try {
+            Message msg = decode(username, obj);
             if (!chatRoomMap.containsKey(msg.getRoom())) {
                 ChatRoom room = new ChatRoom(msg.getRoom(), new ObservableArrayList<>());
-                room.getMessages().add(msg);
                 chatRoomMap.put(room.getName(), room);
+                chatrooms.add(room);
+                room.getMessages().add(msg);
             } else {
                 chatRoomMap.get(msg.getRoom()).getMessages().add(msg);
             }
@@ -157,18 +169,48 @@ public class Application extends android.app.Application {
             JSONObject obj = (JSONObject) args[0];
             Log.d("chat", String.valueOf(obj));
             // TODO fix crash on reconnect
+            for (ChatRoom room : chatrooms) {
+                room.getMessages().clear();
+            }
             chatrooms.clear();
             chatRoomMap.clear();
             for (String key : iterable(obj.keys())) {
                 try {
-                    ChatRoom room = decodeRoom("Rene8888", obj.getJSONObject(key));
-                    chatrooms.add(room);
+                    ChatRoom room = decodeRoom(username, obj.getJSONObject(key));
                     chatRoomMap.put(room.getName(), room);
+                    chatrooms.add(room);
                 } catch (JSONException e) {
                     throw new RuntimeException(e);
                 }
             }
         });
+    }
+
+    public void sendMessage(String room, String msg) {
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put("date", new Date().getTime());
+            obj.put("room", room);
+            obj.put("user", username);
+            obj.put("text", msg);
+            if (this.socket != null) {
+                this.socket.emit("message", obj);
+            }
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void createRoom(String room) {
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put("room", room);
+            if (this.socket != null) {
+                this.socket.emit("new_room", obj);
+            }
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static ChatRoom decodeRoom(String thisUser, JSONObject object) throws JSONException {
@@ -182,7 +224,7 @@ public class Application extends android.app.Application {
     }
 
     private static Message decode(String thisUser, JSONObject object) throws JSONException {
-        Date date = new Date(object.getInt("date"));
+        Date date = new Date(object.getLong("date"));
         String room = object.getString("room");
         String user = object.getString("user");
         String text = object.getString("text");
@@ -200,5 +242,9 @@ public class Application extends android.app.Application {
 
     public Map<String, ChatRoom> getChatRoomMap() {
         return chatRoomMap;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 }

@@ -27,6 +27,6 @@ public class UserLoginEndpoint {
     @POST
     public Response post(User user) {
         User other = userRepository.findOne(user.getEmail());
-        return Response.status(user.equals(other) ? 200 : 403).entity(Maps.of("success", user.equals(other), "token", userSessionStore.createSession(user))).build();
+        return Response.status(user.equals(other) ? 200 : 403).entity(Maps.of("success", user.equals(other), "token", userSessionStore.createSession(other), "username", other.getUsername())).build();
     }
 }
