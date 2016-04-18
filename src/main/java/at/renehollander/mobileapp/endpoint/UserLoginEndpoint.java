@@ -2,7 +2,6 @@ package at.renehollander.mobileapp.endpoint;
 
 import at.renehollander.mobileapp.entity.User;
 import at.renehollander.mobileapp.repository.UserRepository;
-import at.renehollander.mobileapp.session.UserSessionStore;
 import at.renehollander.mobileapp.util.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -21,12 +20,9 @@ public class UserLoginEndpoint {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private UserSessionStore userSessionStore;
-
     @POST
     public Response post(User user) {
         User other = userRepository.findOne(user.getEmail());
-        return Response.status(user.equals(other) ? 200 : 403).entity(Maps.of("success", user.equals(other), "token", userSessionStore.createSession(other), "username", other.getUsername())).build();
+        return Response.status(user.equals(other) ? 200 : 403).entity(Maps.of("success", user.equals(other), "username", other.getUsername())).build();
     }
 }

@@ -25,37 +25,20 @@ public class ChatHandler implements ConnectListener, DisconnectListener {
 
     private Map<String, Map<String, Object>> chatrooms = new HashMap<>();
 
-    private void init() {
-//        {
-//            List<Map<String, Object>> messageList = new ArrayList<>();
-//            messageList.add(Maps.of("room", "Room 1", "user", "Rene8888", "date", new Date(), "text", "Hello World!"));
-//            messageList.add(Maps.of("room", "Room 1", "user", "Paul1032", "date", new Date(), "text", "Hi!"));
-//            messageList.add(Maps.of("room", "Room 1", "user", "Rene8888", "date", new Date(), "text", "fock off m8"));
-//            messageList.add(Maps.of("room", "Room 1", "user", "Rene8888", "date", new Date(), "text", "you gucci fam?"));
-//            messageList.add(Maps.of("room", "Room 1", "user", "Paul1032", "date", new Date(), "text", "sure you faggot"));
-//            chatrooms.put("Room 1", Maps.of("name", "Room 1", "messages", messageList));
-//        }
-//        {
-//            List<Map<String, Object>> messageList = new ArrayList<>();
-//            messageList.add(Maps.of("room", "Room 2", "user", "Paul1032", "date", new Date(), "text", "itz workening!"));
-//            messageList.add(Maps.of("room", "Room 2", "user", "Rene8888", "date", new Date(), "text", "yiss!"));
-//            messageList.add(Maps.of("room", "Room 2", "user", "Rene8888", "date", new Date(), "text", "but its shit m9"));
-//            messageList.add(Maps.of("room", "Room 2", "user", "Paul1032", "date", new Date(), "text", "it is\nmultiline"));
-//            messageList.add(Maps.of("room", "Room 2", "user", "Rene8888", "date", new Date(), "text", "thats nice"));
-//            chatrooms.put("Room 2", Maps.of("name", "Room 2", "messages", messageList));
-//        }
-    }
-
     @Override
     public void onConnect(SocketIOClient client) {
         LOG.info("Client " + client + " connected!");
     }
 
     @Event("message")
+    @SuppressWarnings("unchecked")
     public void onChat(SocketIOClient client, Map<String, Object> data) {
+        // Get room id from request
         String roomid = (String) data.get("room");
         List<Object> messages;
+        // if a room with the given id exists, append message,otherwise create new room
         if (!chatrooms.containsKey(roomid)) {
+            // creates a new room
             messages = new ArrayList<>();
             Map<String, Object> roomObj = new HashMap<>();
             roomObj.put("name", roomid);
@@ -64,19 +47,20 @@ public class ChatHandler implements ConnectListener, DisconnectListener {
         } else {
             messages = (List<Object>) chatrooms.get(roomid).get("messages");
         }
+        // append message and inform clients
         messages.add(data);
         server.getBroadcastOperations().sendEvent("message", data);
-        LOG.info(String.valueOf(data));
     }
 
     @Event("get_rooms")
     public void onGetRooms(SocketIOClient client, Object ignore, AckRequest ackSender) {
+        // send all chatrooms to the client
         ackSender.sendAckData(chatrooms);
     }
 
     @Event("new_room")
     public void onNewRoom(SocketIOClient client, Map<String, Object> data, AckRequest ackSender) {
-        LOG.info(String.valueOf(data));
+        // create a new room with the given name and inform clients
         chatrooms.put((String) data.get("room"), Maps.of("name", data.get("room"), "messages", new ArrayList<>()));
         server.getBroadcastOperations().sendEvent("new_room", data);
     }

@@ -4,7 +4,6 @@
     android:gravity="right"
     android:orientation="vertical"
     android:padding="4dp">
-    ren
 
     <LinearLayout
         android:layout_width="wrap_content"

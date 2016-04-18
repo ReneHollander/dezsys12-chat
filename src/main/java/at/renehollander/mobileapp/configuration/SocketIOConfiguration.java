@@ -32,6 +32,7 @@ public class SocketIOConfiguration {
 
     @Bean(name = "socketIOServers")
     public List<SocketIOServer> socketIOServers() {
+        // Use beans to find all instances of a @SocketIO annotated class to create a server for
         Map<String, Object> beans = context.getBeansWithAnnotation(SocketIO.class);
         List<SocketIOServer> servers = new ArrayList<>();
         beans.forEach((name, o) -> {
@@ -44,23 +45,30 @@ public class SocketIOConfiguration {
 
     @SuppressWarnings("unchecked")
     public SocketIOServer createFrom(SocketIO annotationConfig, Object object) {
+        // Setup SocketIO configuration
         com.corundumstudio.socketio.Configuration config = new com.corundumstudio.socketio.Configuration();
         config.setPort(annotationConfig.port());
         config.getSocketConfig().setReuseAddress(true);
 
+        // Create a new SocketIO server instance with the given config
         SocketIOServer server = new SocketIOServer(config);
+        // If the Target class implements the given listener, add it to the server
         if (object instanceof ConnectListener)
             server.addConnectListener((ConnectListener) object);
         if (object instanceof DisconnectListener)
             server.addDisconnectListener((DisconnectListener) object);
 
+        // Got through all methods in the class and check if it it has the @Event annotation
         for (Method method : object.getClass().getDeclaredMethods()) {
             Event event = method.getAnnotation(Event.class);
+            // if the event annotation is existing, create a handler stub for socketio server and
+            // forward it to the method via reflection
             if (event != null) {
                 if (event.value().isEmpty()) {
                     throw new IllegalArgumentException("Invalid event name for method " + stringifyMethod(method));
                 }
                 if (method.getParameterCount() == 2) {
+                    // Uses a default Ack Request implementation that throws an error
                     checkParameterType(method, 0, SocketIOClient.class);
                     LOG.info("Mapped event \"" + event.value() + "\" onto " + stringifyMethod(method));
                     server.addEventListener(event.value(), method.getParameterTypes()[1], (DataListener) (client, data, ackSender) -> {
@@ -69,6 +77,7 @@ public class SocketIOConfiguration {
                         method.invoke(object, client, data);
                     });
                 } else if (method.getParameterCount() == 3) {
+                    // Used if an Ack Request should be handled
                     checkParameterType(method, 0, SocketIOClient.class);
                     checkParameterType(method, 2, AckRequest.class);
                     LOG.info("Mapped event \"" + event.value() + "\" onto " + stringifyMethod(method));
@@ -81,6 +90,7 @@ public class SocketIOConfiguration {
             }
         }
 
+        // Loop through all fields to inject the SocketIOServer instance if needed
         for (Field field : object.getClass().getDeclaredFields()) {
             if (field.getType() == SocketIOServer.class) {
                 boolean accessible = field.isAccessible();
@@ -92,7 +102,10 @@ public class SocketIOConfiguration {
                 }
                 field.setAccessible(accessible);
             }
+
         }
+
+        // Try to initialize the Handler via the init() Method, do nothing if it doesnt exist
         try {
             Method initMethod = object.getClass().getDeclaredMethod("init");
             boolean accessible = initMethod.isAccessible();
@@ -103,6 +116,8 @@ public class SocketIOConfiguration {
         } catch (InvocationTargetException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
+
+        // Start the server
         server.start();
         return server;
     }

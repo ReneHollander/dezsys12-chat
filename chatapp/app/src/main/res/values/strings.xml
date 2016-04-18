@@ -15,4 +15,5 @@
     <string name="login_fragment_title">Login</string>
     <string name="register_fragment_title">Register</string>
     <string name="chatrooms_fragment_title">Chatrooms</string>
+    <string name="send_a_message">Send a message</string>
 </resources>
